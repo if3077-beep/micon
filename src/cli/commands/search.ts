@@ -10,6 +10,7 @@ import ora from 'ora';
 
 import type { HubSearchResult, HubGrade } from '../../core/types.js';
 import { HubSearch } from '../../hub/search.js';
+import { truncate } from '../../utils/format.js';
 
 // ---------------------------------------------------------------------------
 // 辅助函数
@@ -25,12 +26,6 @@ function gradeColor(grade: HubGrade): string {
     case 'F': return chalk.red.bold(grade);
     default:  return grade;
   }
-}
-
-/** 截断字符串 */
-function truncate(str: string, maxLen: number): string {
-  if (str.length <= maxLen) return str;
-  return str.slice(0, maxLen - 1) + '…';
 }
 
 /** 格式化日期为相对时间 */

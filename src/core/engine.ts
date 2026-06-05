@@ -228,7 +228,7 @@ export class AgentEngine {
               const result = await this.executeTool(toolName, toolArgsStr);
               this.addStep('tool_call', {
                 toolName,
-                toolOutput: result.content.slice(0, 500),
+                toolOutput: result.content.slice(0, 2000),
               });
               messages.push({
                 role: 'tool',

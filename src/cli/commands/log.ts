@@ -11,6 +11,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
+import { formatDuration } from '../../utils/format.js';
 
 // ---------------------------------------------------------------------------
 // 辅助函数
@@ -41,13 +42,6 @@ function statusEmoji(status: string): string {
     case 'partial': return '⚠️';
     default:        return '•';
   }
-}
-
-/** 格式化时长 */
-function formatDuration(ms: number): string {
-  if (ms < 1000) return `${ms}ms`;
-  if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
-  return `${(ms / 60000).toFixed(1)}m`;
 }
 
 // ---------------------------------------------------------------------------

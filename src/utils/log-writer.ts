@@ -13,9 +13,11 @@ export async function appendLog(
   agentName: string,
   result: unknown,
 ): Promise<void> {
+  // Sanitize agentName to prevent path traversal
+  const safeName = agentName.replace(/[^a-zA-Z0-9_-]/g, '_');
   const logsDir = join(homedir(), '.micon', 'logs');
   await mkdir(logsDir, { recursive: true });
-  const logPath = join(logsDir, `${agentName}.jsonl`);
+  const logPath = join(logsDir, `${safeName}.jsonl`);
   const line = JSON.stringify(result) + '\n';
   await appendFile(logPath, line, 'utf-8');
 }

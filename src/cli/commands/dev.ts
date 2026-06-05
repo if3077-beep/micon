@@ -13,7 +13,7 @@ import type { AgentDefinition, RunConfig } from '../../core/types.js';
 import { AgentEngine } from '../../core/engine.js';
 import { AgentStore } from '../../agent/store.js';
 import { loadAgent } from '../../agent/loader.js';
-import { collectInputs, displaySteps } from '../../utils/format.js';
+import { collectInputs, displayResult } from '../../utils/format.js';
 import { appendLog } from '../../utils/log-writer.js';
 
 // ---------------------------------------------------------------------------
@@ -26,6 +26,8 @@ export function createDevCommand(): Command {
     .description('Run an agent in interactive development mode')
     .argument('<agent>', 'Agent name or file path')
     .option('-i, --input <key=value>', 'Input parameter', collectInputs, {})
+    .option('--model <model>', 'Override LLM model')
+    .option('--max-steps <n>', 'Maximum ReAct loop steps')
     .action(async (agentTarget, options) => {
       const spinner = ora('Loading agent...').start();
       let agent: AgentDefinition;
@@ -54,8 +56,8 @@ export function createDevCommand(): Command {
         inputs,
         dryRun: false,
         interactive: true,
-        maxSteps: agent.maxSteps ?? 10,
-        model: agent.model ?? 'gpt-4o',
+        maxSteps: options.maxSteps ? parseInt(options.maxSteps, 10) : (agent.maxSteps ?? 10),
+        model: options.model ?? agent.model ?? 'gpt-4o',
       };
 
       const runSpinner = ora('Running agent in dev mode...').start();
@@ -66,37 +68,7 @@ export function createDevCommand(): Command {
 
         runSpinner.stop();
 
-        const status = result.status as string;
-        if (status === 'success') {
-          console.log(chalk.green('\n✅ Agent completed successfully\n'));
-        } else if (status === 'partial') {
-          console.log(chalk.yellow('\n⚠️  Agent completed partially (max steps reached)\n'));
-        } else {
-          console.log(chalk.red('\n❌ Agent failed\n'));
-        }
-
-        // 展示步骤详情
-        if (result.steps && result.steps.length > 0) {
-          console.log(chalk.bold('Execution steps:'));
-          displaySteps(result.steps);
-          console.log();
-        }
-
-        // 最终输出
-        const output = result.output ?? '';
-        if (output) {
-          console.log(chalk.bold('Output:'));
-          console.log(chalk.white(String(output)));
-          console.log();
-        }
-
-        // Token 用量
-        if (result.tokenUsage) {
-          const tu = result.tokenUsage;
-          console.log(
-            chalk.dim(`Token usage: ${tu.input ?? 0} input, ${tu.output ?? 0} output`),
-          );
-        }
+        displayResult(result);
 
         // 保存日志
         await appendLog(agent.name, result);

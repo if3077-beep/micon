@@ -80,7 +80,7 @@ export function createConfigCommand(): Command {
         console.log(`  Version:    ${config.version}`);
         console.log(`  Provider:   ${config.llm.provider}`);
         console.log(`  Model:      ${config.llm.model}`);
-        console.log(`  API Key:    ${config.llm.apiKey ? chalk.green('****' + config.llm.apiKey.slice(-4)) : chalk.red('not set')}`);
+        console.log(`  API Key:    ${config.llm.apiKey ? chalk.green('configured') : chalk.red('not set')}`);
         console.log(`  Base URL:   ${config.llm.baseUrl ?? 'default'}`);
 
         const serverCount = Object.keys(config.mcpServers).length;

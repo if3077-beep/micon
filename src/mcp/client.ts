@@ -6,7 +6,14 @@
 
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 import type { ToolResult } from '../core/types.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const pkg = JSON.parse(readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf-8'));
 
 /** MCP 工具描述（从 SDK 返回的原始结构简化） */
 export interface Tool {
@@ -61,7 +68,7 @@ export class McpClient {
     });
 
     const client = new Client(
-      { name: 'micon', version: '0.1.0' },
+      { name: 'micon', version: pkg.version },
       { capabilities: {} },
     );
 

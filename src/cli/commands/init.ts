@@ -62,11 +62,16 @@ export function createInitCommand(): Command {
             process.exit(1);
           }
 
+          // 自动填入已安装的 MCP Server
+          const registry = new McpRegistry();
+          const installed = await registry.list();
+          const tools = installed.map((s) => s.manifest.name);
+
           agent = {
             name,
             description: template.description ?? '',
             goal: template.goal ?? '',
-            tools: [],
+            tools,
             constraints: template.constraints ?? [],
             inputs: {},
             output: template.output ?? { format: 'text', to: 'stdout' },

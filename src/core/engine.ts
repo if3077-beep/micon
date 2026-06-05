@@ -113,6 +113,34 @@ export class AgentEngine {
     const startMs = Date.now();
 
     try {
+      const agent = this.config.agent;
+
+      // dry-run 模式：不连接 MCP、不调 LLM，只展示执行计划
+      if (this.config.dryRun) {
+        const allTools = await this.getDryRunTools();
+        const plan = [
+          `Agent: ${agent.name}`,
+          `Goal: ${agent.goal}`,
+          `Tools: ${allTools.map((t) => t.name).join(', ') || '(none)'}`,
+          `Constraints: ${agent.constraints.join(', ') || '(none)'}`,
+          `Max steps: ${this.config.maxSteps}`,
+        ].join('\n');
+
+        return {
+          agentName: agent.name,
+          status: 'success',
+          steps: [{
+            stepNumber: 1,
+            type: 'dry_run' as const,
+            toolOutput: plan,
+            duration: 0,
+          }],
+          output: plan,
+          startTime: startIso,
+          endTime: new Date().toISOString(),
+        };
+      }
+
       // 1. Load config & init OpenAI client
       const configStore = new ConfigStore();
       const llmConfig = await configStore.getLlmConfig();
@@ -120,13 +148,12 @@ export class AgentEngine {
         apiKey: llmConfig.apiKey,
         baseURL: llmConfig.baseUrl,
       });
-      this.model = this.config.model ?? this.config.agent.model ?? llmConfig.model;
+      this.model = this.config.model ?? agent.model ?? llmConfig.model;
 
       // 2. Connect MCP servers & collect tools
       const allTools = await this.connectMcpServers();
 
       // 3. Build system prompt & conversation
-      const agent = this.config.agent;
       const constraints = agent.constraints;
       const systemPrompt = buildSystemPrompt(agent.goal, allTools, constraints);
       const openaiTools = mcpToolsToOpenAI(allTools);
@@ -452,5 +479,37 @@ export class AgentEngine {
 
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * dry-run 模式下的模拟工具列表
+   * 不启动 MCP 子进程，从 registry 读取 manifest 中的 capabilities 作为工具列表
+   */
+  private async getDryRunTools(): Promise<
+    Array<{ name: string; description: string; inputSchema: Record<string, unknown> }>
+  > {
+    const agent = this.config.agent;
+    const registry = new McpRegistry();
+    const allTools: Array<{
+      name: string;
+      description: string;
+      inputSchema: Record<string, unknown>;
+    }> = [];
+
+    for (const serverName of agent.tools) {
+      const installed = await registry.get(serverName);
+      if (!installed) continue;
+
+      // 从 manifest 的 capabilities 生成模拟工具
+      for (const cap of installed.manifest.capabilities) {
+        allTools.push({
+          name: cap.name,
+          description: cap.description,
+          inputSchema: { type: 'object' as const, properties: {} },
+        });
+      }
+    }
+
+    return allTools;
   }
 }

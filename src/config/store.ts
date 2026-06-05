@@ -115,6 +115,15 @@ export class ConfigStore {
   async getLlmConfig(): Promise<LlmConfig> {
     const config = await this.load();
 
+    // 优先使用环境变量
+    if (!config.llm.apiKey) {
+      const envKey = process.env.OPENAI_API_KEY ?? process.env.ANTHROPIC_API_KEY;
+      if (envKey) {
+        config.llm.apiKey = envKey;
+        await this.save(config);
+      }
+    }
+
     if (!config.llm.apiKey) {
       const { default: inquirer } = await import('inquirer');
       const { apiKey } = await inquirer.prompt<{

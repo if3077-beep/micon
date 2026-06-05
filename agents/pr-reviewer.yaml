@@ -6,7 +6,7 @@ goal: |
   将审查结果以评论的形式发布到 PR 上。
 
 tools:
-  - @anthropic/github-mcp
+  - '@anthropic/github-mcp'
 
 constraints:
   - 只读代码，不修改任何文件

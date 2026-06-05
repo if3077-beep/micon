@@ -6,7 +6,7 @@ goal: |
   文档应包含：函数签名、参数说明、返回值、使用示例。
 
 tools:
-  - @anthropic/filesystem-mcp
+  - '@anthropic/filesystem-mcp'
 
 constraints:
   - 只读取代码文件，不修改源代码

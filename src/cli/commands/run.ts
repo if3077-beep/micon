@@ -153,7 +153,7 @@ export function createRunCommand(): Command {
     .option('-i, --input <key=value>', 'Input parameter (repeatable)', collectInputs, {})
     .option('-d, --dry-run', 'Preview actions without executing', false)
     .option('--model <model>', 'Override LLM model')
-    .option('--max-steps <n>', 'Maximum ReAct loop steps', '10')
+    .option('--max-steps <n>', 'Maximum ReAct loop steps')
     .action(async (target, options) => {
       // 1. 未提供 target 时显示帮助
       if (!target) {
@@ -222,7 +222,7 @@ export function createRunCommand(): Command {
         inputs,
         dryRun: options.dryRun ?? false,
         interactive: false,
-        maxSteps: parseInt(options.maxSteps, 10) || 10,
+        maxSteps: options.maxSteps ? parseInt(options.maxSteps, 10) : (agent.maxSteps ?? 10),
         model: options.model ?? agent.model ?? 'gpt-4o',
       };
 
@@ -241,7 +241,11 @@ export function createRunCommand(): Command {
         } else if (status === 'partial') {
           console.log(chalk.yellow('\n⚠️  Agent completed partially (max steps reached)\n'));
         } else {
-          console.log(chalk.red('\n❌ Agent failed\n'));
+          console.log(chalk.red('\n❌ Agent failed'));
+          if (result.error) {
+            console.log(chalk.red(`   Error: ${result.error}`));
+          }
+          console.log();
         }
 
         // 展示步骤

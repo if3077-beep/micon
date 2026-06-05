@@ -6,7 +6,7 @@ goal: |
   整理成结构化的研究报告，包含关键发现、数据来源和总结。
 
 tools:
-  - @anthropic/brave-search-mcp
+  - '@anthropic/brave-search-mcp'
 
 constraints:
   - 只搜索和阅读公开信息

@@ -179,7 +179,11 @@ async function runAdHoc(instruction: string): Promise<void> {
         chalk.yellow('\n⚠️  Agent completed partially (max steps reached)\n'),
       );
     } else {
-      console.log(chalk.red('\n❌ Agent failed\n'));
+      console.log(chalk.red('\n❌ Agent failed'));
+      if (result.error) {
+        console.log(chalk.red(`   Error: ${result.error}`));
+      }
+      console.log();
     }
 
     // 展示步骤

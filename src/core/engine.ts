@@ -17,7 +17,7 @@ import type {
   ToolResult,
 } from './types.js';
 
-import { McpClient, type Tool as McpTool } from '../mcp/client.js';
+import { McpClient } from '../mcp/client.js';
 import { McpRegistry } from '../mcp/registry.js';
 import { ConfigStore } from '../config/store.js';
 
@@ -65,7 +65,7 @@ function mcpToolsToOpenAI(
   }));
 }
 
-function checkConstraint(
+export function checkConstraint(
   toolName: string,
   constraints: string[],
 ): { blocked: boolean; reason?: string } {
@@ -99,6 +99,7 @@ export class AgentEngine {
   /** toolName → serverName 映射 */
   private toolServerMap = new Map<string, string>();
   private lastStepTime = Date.now();
+  private retryCount = 0;
 
   constructor(config: RunConfig) {
     this.config = config;
@@ -111,7 +112,7 @@ export class AgentEngine {
 
   async run(): Promise<ExecutionResult> {
     const startIso = new Date().toISOString();
-    const startMs = Date.now();
+    this.retryCount = 0;
 
     try {
       const agent = this.config.agent;
@@ -366,7 +367,8 @@ export class AgentEngine {
     } catch (err) {
       // Retry once with exponential backoff for API errors and network failures
       if (err instanceof OpenAI.APIError || err instanceof TypeError) {
-        const delay = Math.min(1000 * Math.pow(2, 1), 10000);
+        const delay = Math.min(1000 * Math.pow(2, this.retryCount), 10000);
+        this.retryCount++;
         await this.sleep(delay);
         return await this.openai.chat.completions.create(params);
       }

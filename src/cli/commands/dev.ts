@@ -82,7 +82,7 @@ export function createDevCommand(): Command {
           console.log();
         }
 
-        // 最终输出（兼容 engine 实际返回的 result 字段和类型定义的 output 字段）
+        // 最终输出
         const output = result.output ?? '';
         if (output) {
           console.log(chalk.bold('Output:'));
@@ -92,7 +92,7 @@ export function createDevCommand(): Command {
 
         // Token 用量
         if (result.tokenUsage) {
-          const tu = result.tokenUsage as { input?: number; output?: number };
+          const tu = result.tokenUsage;
           console.log(
             chalk.dim(`Token usage: ${tu.input ?? 0} input, ${tu.output ?? 0} output`),
           );

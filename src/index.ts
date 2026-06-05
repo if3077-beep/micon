@@ -6,7 +6,6 @@ import ora from 'ora';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createInterface } from 'node:readline';
 
 import { createRunCommand } from './cli/commands/run.js';
 import { createSearchCommand } from './cli/commands/search.js';
@@ -23,8 +22,9 @@ import type { AgentDefinition, RunConfig } from './core/types.js';
 import { AgentEngine } from './core/engine.js';
 import { AgentStore } from './agent/store.js';
 import { McpRegistry } from './mcp/registry.js';
-import { displaySteps } from './utils/format.js';
+import { displaySteps, displayResult } from './utils/format.js';
 import { appendLog } from './utils/log-writer.js';
+import { askSaveAgent } from './utils/agent-helper.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -33,39 +33,6 @@ const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-
 // ---------------------------------------------------------------------------
 // 默认 action：自然语言一键模式
 // ---------------------------------------------------------------------------
-
-/** 交互式询问用户是否保存为可复用 Agent */
-async function askSaveAgent(instruction: string): Promise<void> {
-  const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  const answer = await new Promise<string>((resolve) => {
-    rl.question(chalk.cyan('\nSave as reusable agent? [Y/n] '), resolve);
-  });
-  rl.close();
-
-  if (answer.toLowerCase() === 'n') return;
-
-  const name = instruction.slice(0, 40).replace(/[^a-zA-Z0-9_-]/g, '_');
-  const registry = new McpRegistry();
-  const installed = await registry.list();
-
-  const agent: AgentDefinition = {
-    name,
-    description: instruction,
-    goal: instruction,
-    tools: installed.map((s) => s.manifest.name),
-    constraints: [],
-    inputs: {},
-    output: { format: 'text', to: 'stdout' },
-  };
-
-  const store = new AgentStore();
-  await store.save(agent);
-  console.log(chalk.green(`✅ Agent "${name}" saved to store.`));
-}
 
 /**
  * 一键自然语言模式
@@ -120,51 +87,13 @@ async function runAdHoc(instruction: string): Promise<void> {
     spinner.stop();
 
     // 4. 展示结果
-    const status = result.status as string;
-    if (status === 'success') {
-      console.log(chalk.green('\n✅ Agent completed successfully\n'));
-    } else if (status === 'partial') {
-      console.log(
-        chalk.yellow('\n⚠️  Agent completed partially (max steps reached)\n'),
-      );
-    } else {
-      console.log(chalk.red('\n❌ Agent failed'));
-      if (result.error) {
-        console.log(chalk.red(`   Error: ${result.error}`));
-      }
-      console.log();
-    }
-
-    // 展示步骤
-    if (result.steps && Array.isArray(result.steps) && result.steps.length > 0) {
-      console.log(chalk.bold('Steps:'));
-      displaySteps(result.steps);
-      console.log();
-    }
-
-    // 最终输出
-    const output = result.output ?? '';
-    if (output) {
-      console.log(chalk.bold('Output:'));
-      console.log(chalk.white(output));
-      console.log();
-    }
-
-    // Token 用量
-    if (result.tokenUsage) {
-      const tu = result.tokenUsage;
-      console.log(
-        chalk.dim(
-          `Token usage: ${tu.input} input, ${tu.output} output`,
-        ),
-      );
-    }
+    displayResult(result);
 
     // 保存日志
     await appendLog(agent.name, result);
 
     // 5. 询问是否保存为可复用 Agent
-    if (status === 'success') {
+    if (result.status === 'success') {
       await askSaveAgent(instruction);
     }
   } catch (err) {

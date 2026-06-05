@@ -36,7 +36,7 @@ function loadBundledRegistry(): McpServerManifest[] {
 }
 
 /** 从 GitHub 仓库数据推断安装类型 */
-function inferInstallType(repo: GitHubRepo): McpServerManifest['install'] {
+export function inferInstallType(repo: GitHubRepo): McpServerManifest['install'] {
   const name = repo.name.toLowerCase();
   const desc = (repo.description ?? '').toLowerCase();
 
@@ -60,7 +60,7 @@ function inferInstallType(repo: GitHubRepo): McpServerManifest['install'] {
 }
 
 /** 从 GitHub 仓库数据推断能力列表 */
-function inferCapabilities(repo: GitHubRepo): McpServerManifest['capabilities'] {
+export function inferCapabilities(repo: GitHubRepo): McpServerManifest['capabilities'] {
   const desc = repo.description ?? '';
   const caps: Array<{ name: string; description: string }> = [];
 
@@ -89,7 +89,7 @@ function inferCapabilities(repo: GitHubRepo): McpServerManifest['capabilities'] 
 }
 
 /** 从 GitHub 仓库数据推断权限 */
-function inferPermissions(repo: GitHubRepo): McpServerManifest['permissions'] {
+export function inferPermissions(repo: GitHubRepo): McpServerManifest['permissions'] {
   const desc = (repo.description ?? '').toLowerCase();
   const perms: McpServerManifest['permissions'] = [
     { name: 'read', description: 'Read access', default: 'allow' },
@@ -103,7 +103,7 @@ function inferPermissions(repo: GitHubRepo): McpServerManifest['permissions'] {
 }
 
 /** GitHub 仓库搜索结果类型 */
-interface GitHubRepo {
+export interface GitHubRepo {
   full_name: string;
   name: string;
   description: string | null;

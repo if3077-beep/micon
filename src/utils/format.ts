@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import type { HubGrade, ExecutionStep } from '../core/types.js';
+import type { HubGrade, ExecutionStep, ExecutionResult } from '../core/types.js';
 
 // ---------------------------------------------------------------------------
 // 步骤展示
@@ -156,4 +156,47 @@ export function formatPermissions(
   return permissions
     .map((p) => (granted.includes(p) ? `✅ ${p}` : `❌ ${p}`))
     .join('  ');
+}
+
+/**
+ * 展示 Agent 执行结果
+ */
+export function displayResult(result: ExecutionResult): void {
+  const status = result.status;
+  if (status === 'success') {
+    console.log(chalk.green('\n✅ Agent completed successfully\n'));
+  } else if (status === 'partial') {
+    console.log(chalk.yellow('\n⚠️  Agent completed partially (max steps reached)\n'));
+  } else {
+    console.log(chalk.red('\n❌ Agent failed'));
+    if (result.error) {
+      console.log(chalk.red(`   Error: ${result.error}`));
+    }
+    console.log();
+  }
+
+  // 展示步骤
+  if (result.steps && result.steps.length > 0) {
+    console.log(chalk.bold('Steps:'));
+    displaySteps(result.steps);
+    console.log();
+  }
+
+  // 最终输出
+  const output = result.output ?? '';
+  if (output) {
+    console.log(chalk.bold('Output:'));
+    console.log(chalk.white(output));
+    console.log();
+  }
+
+  // Token 用量
+  if (result.tokenUsage) {
+    const tu = result.tokenUsage;
+    console.log(
+      chalk.dim(
+        `Token usage: ${tu.input} input, ${tu.output} output`,
+      ),
+    );
+  }
 }

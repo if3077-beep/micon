@@ -7,51 +7,15 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { createInterface } from 'node:readline';
 
 import type { AgentDefinition, RunConfig } from '../../core/types.js';
 import { AgentEngine } from '../../core/engine.js';
 import { AgentStore } from '../../agent/store.js';
 import { loadAgent } from '../../agent/loader.js';
 import { McpRegistry } from '../../mcp/registry.js';
-import { displaySteps, collectInputs } from '../../utils/format.js';
+import { displaySteps, collectInputs, displayResult } from '../../utils/format.js';
 import { appendLog } from '../../utils/log-writer.js';
-
-// ---------------------------------------------------------------------------
-// 辅助函数
-// ---------------------------------------------------------------------------
-
-/** 交互式询问用户是否保存为可复用 Agent */
-async function askSaveAgent(target: string): Promise<void> {
-  const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  const answer = await new Promise<string>((resolve) => {
-    rl.question(chalk.cyan('Save as reusable agent? [Y/n] '), resolve);
-  });
-  rl.close();
-
-  if (answer.toLowerCase() === 'n') return;
-
-  const name = target.slice(0, 40).replace(/[^a-zA-Z0-9_-]/g, '_');
-  const registry = new McpRegistry();
-  const installed = await registry.list();
-  const agent: AgentDefinition = {
-    name,
-    description: target,
-    goal: target,
-    tools: installed.map((s) => s.manifest.name),
-    constraints: [],
-    inputs: {},
-    output: { format: 'text', to: 'stdout' },
-  };
-
-  const store = new AgentStore();
-  await store.save(agent);
-  console.log(chalk.green(`✅ Agent "${name}" saved to store.`));
-}
+import { askSaveAgent } from '../../utils/agent-helper.js';
 
 // ---------------------------------------------------------------------------
 // 命令定义
@@ -147,49 +111,13 @@ export function createRunCommand(): Command {
         runSpinner.stop();
 
         // 8. 展示结果
-        const status = result.status as string;
-        if (status === 'success') {
-          console.log(chalk.green('\n✅ Agent completed successfully\n'));
-        } else if (status === 'partial') {
-          console.log(chalk.yellow('\n⚠️  Agent completed partially (max steps reached)\n'));
-        } else {
-          console.log(chalk.red('\n❌ Agent failed'));
-          if (result.error) {
-            console.log(chalk.red(`   Error: ${result.error}`));
-          }
-          console.log();
-        }
-
-        // 展示步骤
-        if (result.steps && Array.isArray(result.steps) && result.steps.length > 0) {
-          console.log(chalk.bold('Steps:'));
-          displaySteps(result.steps);
-          console.log();
-        }
-
-        // 最终输出
-        const output = result.output ?? '';
-        if (output) {
-          console.log(chalk.bold('Output:'));
-          console.log(chalk.white(output));
-          console.log();
-        }
-
-        // Token 用量
-        if (result.tokenUsage) {
-          const tu = result.tokenUsage;
-          console.log(
-            chalk.dim(
-              `Token usage: ${tu.input} input, ${tu.output} output`,
-            ),
-          );
-        }
+        displayResult(result);
 
         // 9. 保存日志
         await appendLog(agent.name, result);
 
         // 10. 自然语言模式下询问是否保存
-        if (isAdHoc && status === 'success') {
+        if (isAdHoc && result.status === 'success') {
           await askSaveAgent(target);
         }
       } catch (err) {

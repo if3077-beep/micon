@@ -112,7 +112,6 @@ export class AgentEngine {
 
   async run(): Promise<ExecutionResult> {
     const startIso = new Date().toISOString();
-    this.retryCount = 0;
 
     try {
       const agent = this.config.agent;
@@ -356,6 +355,7 @@ export class AgentEngine {
     messages: OpenAI.ChatCompletionMessageParam[],
     tools: OpenAI.ChatCompletionTool[],
   ): Promise<OpenAI.ChatCompletion> {
+    this.retryCount = 0;
     const params: OpenAI.ChatCompletionCreateParams = {
       model: this.model,
       messages,

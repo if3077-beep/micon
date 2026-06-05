@@ -60,6 +60,20 @@ export class McpClient {
       throw new Error(`MCP server "${serverName}" is already connected`);
     }
 
+    // 参数校验
+    if (!command || typeof command !== 'string') {
+      throw new Error(
+        `Invalid MCP server configuration for "${serverName}": command is empty or not a string. ` +
+        `Run "micon remove ${serverName}" and reinstall with "micon add".`,
+      );
+    }
+    if (!Array.isArray(args)) {
+      throw new Error(
+        `Invalid MCP server configuration for "${serverName}": args must be an array. ` +
+        `Run "micon remove ${serverName}" and reinstall with "micon add".`,
+      );
+    }
+
     const transport = new StdioClientTransport({
       command,
       args,

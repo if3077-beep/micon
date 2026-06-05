@@ -7,9 +7,6 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { appendFile, mkdir } from 'node:fs/promises';
-import { join } from 'node:path';
-import { homedir } from 'node:os';
 import { createInterface } from 'node:readline';
 
 import type { AgentDefinition, RunConfig } from '../../core/types.js';
@@ -17,43 +14,12 @@ import { AgentEngine } from '../../core/engine.js';
 import { AgentStore } from '../../agent/store.js';
 import { loadAgent } from '../../agent/loader.js';
 import { McpRegistry } from '../../mcp/registry.js';
+import { displaySteps, collectInputs } from '../../utils/format.js';
+import { appendLog } from '../../utils/log-writer.js';
 
 // ---------------------------------------------------------------------------
 // 辅助函数
 // ---------------------------------------------------------------------------
-
-/** 收集 --input key=value 参数 */
-function collectInputs(
-  value: string,
-  previous: Record<string, unknown>,
-): Record<string, unknown> {
-  const eqIndex = value.indexOf('=');
-  if (eqIndex === -1) {
-    throw new Error(`Invalid input format: "${value}". Expected key=value`);
-  }
-  const key = value.slice(0, eqIndex);
-  const raw = value.slice(eqIndex + 1);
-
-  // 尝试解析为数字或布尔值，否则保留字符串
-  let parsed: unknown = raw;
-  if (raw === 'true') parsed = true;
-  else if (raw === 'false') parsed = false;
-  else if (/^\d+$/.test(raw)) parsed = Number(raw);
-
-  return { ...previous, [key]: parsed };
-}
-
-/** 将执行结果追加到日志文件 */
-async function appendLog(
-  agentName: string,
-  result: unknown,
-): Promise<void> {
-  const logsDir = join(homedir(), '.micon', 'logs');
-  await mkdir(logsDir, { recursive: true });
-  const logPath = join(logsDir, `${agentName}.jsonl`);
-  const line = JSON.stringify(result) + '\n';
-  await appendFile(logPath, line, 'utf-8');
-}
 
 /** 交互式询问用户是否保存为可复用 Agent */
 async function askSaveAgent(target: string): Promise<void> {
@@ -83,62 +49,6 @@ async function askSaveAgent(target: string): Promise<void> {
   const store = new AgentStore();
   await store.save(agent);
   console.log(chalk.green(`✅ Agent "${name}" saved to store.`));
-}
-
-// ---------------------------------------------------------------------------
-// 步骤展示
-// ---------------------------------------------------------------------------
-
-/** 步骤类型 → emoji 前缀 */
-const STEP_EMOJI: Record<string, string> = {
-  tool_call: '🔍',
-  llm_thinking: '🤖',
-  constraint_check: '⚠️',
-  dry_run: '🔍',
-  tool_error: '❌',
-  user_rejected: '🚫',
-  final_answer: '✨',
-};
-
-function displaySteps(steps: Array<Record<string, unknown>>): void {
-  for (const step of steps) {
-    const emoji = STEP_EMOJI[step.type as string] ?? '•';
-    const type = step.type as string;
-
-    if (type === 'tool_call' || type === 'dry_run') {
-      const toolName = (step.toolCall as Record<string, unknown>)?.name ?? 'unknown';
-      const result = step.result
-        ? String(step.result).slice(0, 120)
-        : '';
-      console.log(
-        chalk.dim(`  ${emoji} Step ${step.stepNumber ?? '?'}: `) +
-        chalk.cyan(`[${toolName}]`) +
-        (result ? chalk.dim(` → ${result}`) : ''),
-      );
-    } else if (type === 'llm_thinking') {
-      const thinking = step.result
-        ? String(step.result).slice(0, 100)
-        : '';
-      console.log(
-        chalk.dim(`  ${emoji} Step ${step.stepNumber ?? '?'}: `) +
-        chalk.yellow('thinking') +
-        (thinking ? chalk.dim(` — ${thinking}`) : ''),
-      );
-    } else if (type === 'constraint_check') {
-      const reason = step.error ?? step.result ?? '';
-      console.log(
-        chalk.dim(`  ${emoji} Step ${step.stepNumber ?? '?'}: `) +
-        chalk.red(`constraint — ${reason}`),
-      );
-    } else if (type === 'final_answer') {
-      // final answer 单独展示
-    } else {
-      console.log(
-        chalk.dim(`  ${emoji} Step ${step.stepNumber ?? '?'}: `) +
-        `${type}`,
-      );
-    }
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -251,7 +161,7 @@ export function createRunCommand(): Command {
         // 展示步骤
         if (result.steps && Array.isArray(result.steps) && result.steps.length > 0) {
           console.log(chalk.bold('Steps:'));
-          displaySteps(result.steps as unknown as Array<Record<string, unknown>>);
+          displaySteps(result.steps);
           console.log();
         }
 

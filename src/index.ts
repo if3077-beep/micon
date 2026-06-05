@@ -3,9 +3,9 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { appendFile, mkdir } from 'node:fs/promises';
-import { join } from 'node:path';
-import { homedir } from 'node:os';
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createInterface } from 'node:readline';
 
 import { createRunCommand } from './cli/commands/run.js';
@@ -16,74 +16,23 @@ import { createInitCommand } from './cli/commands/init.js';
 import { createDevCommand } from './cli/commands/dev.js';
 import { createLogCommand } from './cli/commands/log.js';
 import { createConfigCommand } from './cli/commands/config.js';
+import { createRemoveCommand } from './cli/commands/remove.js';
+import { createAgentsCommand } from './cli/commands/agents.js';
 
 import type { AgentDefinition, RunConfig } from './core/types.js';
 import { AgentEngine } from './core/engine.js';
 import { AgentStore } from './agent/store.js';
 import { McpRegistry } from './mcp/registry.js';
+import { displaySteps } from './utils/format.js';
+import { appendLog } from './utils/log-writer.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'));
 
 // ---------------------------------------------------------------------------
 // 默认 action：自然语言一键模式
 // ---------------------------------------------------------------------------
-
-/** 步骤类型 → emoji 前缀 */
-const STEP_EMOJI: Record<string, string> = {
-  tool_call: '🔍',
-  llm_thinking: '🤖',
-  constraint_check: '⚠️',
-  dry_run: '🔍',
-  tool_error: '❌',
-  user_rejected: '🚫',
-  final_answer: '✨',
-};
-
-function displaySteps(steps: Array<Record<string, unknown>>): void {
-  for (const step of steps) {
-    const emoji = STEP_EMOJI[step.type as string] ?? '•';
-    const type = step.type as string;
-
-    if (type === 'tool_call' || type === 'dry_run') {
-      const toolName = (step.toolCall as Record<string, unknown>)?.name ?? 'unknown';
-      const result = step.result ? String(step.result).slice(0, 120) : '';
-      console.log(
-        chalk.dim(`  ${emoji} Step ${step.stepNumber ?? '?'}: `) +
-          chalk.cyan(`[${toolName}]`) +
-          (result ? chalk.dim(` → ${result}`) : ''),
-      );
-    } else if (type === 'llm_thinking') {
-      const thinking = step.result ? String(step.result).slice(0, 100) : '';
-      console.log(
-        chalk.dim(`  ${emoji} Step ${step.stepNumber ?? '?'}: `) +
-          chalk.yellow('thinking') +
-          (thinking ? chalk.dim(` — ${thinking}`) : ''),
-      );
-    } else if (type === 'constraint_check') {
-      const reason = step.error ?? step.result ?? '';
-      console.log(
-        chalk.dim(`  ${emoji} Step ${step.stepNumber ?? '?'}: `) +
-          chalk.red(`constraint — ${reason}`),
-      );
-    } else if (type === 'final_answer') {
-      // final answer 单独展示
-    } else {
-      console.log(
-        chalk.dim(`  ${emoji} Step ${step.stepNumber ?? '?'}: `) + `${type}`,
-      );
-    }
-  }
-}
-
-/** 将执行结果追加到日志文件 */
-async function appendLog(
-  agentName: string,
-  result: unknown,
-): Promise<void> {
-  const logsDir = join(homedir(), '.micon', 'logs');
-  await mkdir(logsDir, { recursive: true });
-  const logPath = join(logsDir, `${agentName}.jsonl`);
-  const line = JSON.stringify(result) + '\n';
-  await appendFile(logPath, line, 'utf-8');
-}
 
 /** 交互式询问用户是否保存为可复用 Agent */
 async function askSaveAgent(instruction: string): Promise<void> {
@@ -189,7 +138,7 @@ async function runAdHoc(instruction: string): Promise<void> {
     // 展示步骤
     if (result.steps && Array.isArray(result.steps) && result.steps.length > 0) {
       console.log(chalk.bold('Steps:'));
-      displaySteps(result.steps as unknown as Array<Record<string, unknown>>);
+      displaySteps(result.steps);
       console.log();
     }
 
@@ -234,7 +183,7 @@ const program = new Command();
 program
   .name('micon')
   .description('MCP Server Hub + Lightweight Agent Runtime')
-  .version('0.1.0');
+  .version(pkg.version);
 
 // 注册所有子命令
 program.addCommand(createRunCommand());
@@ -245,6 +194,8 @@ program.addCommand(createInitCommand());
 program.addCommand(createDevCommand());
 program.addCommand(createLogCommand());
 program.addCommand(createConfigCommand());
+program.addCommand(createRemoveCommand());
+program.addCommand(createAgentsCommand());
 
 // 默认 action：如果用户输入 `micon "some instruction"`，当作自然语言运行
 program.action(async () => {

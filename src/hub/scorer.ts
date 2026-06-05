@@ -20,14 +20,6 @@ function activityScore(lastUpdate: string): number {
   return 10;
 }
 
-/** 文档评分：基于描述长度和能力数量估算 */
-function documentationScore(description: string, capabilityCount: number): number {
-  const descLen = description.length;
-  const descScore = Math.min(100, descLen / 2);
-  const capScore = Math.min(100, capabilityCount * 20);
-  return Math.round(descScore * 0.6 + capScore * 0.4);
-}
-
 /** 社区评分：基于 Stars 数量 */
 function communityScore(stars: number): number {
   if (stars >= 1000) return 100;
@@ -53,7 +45,6 @@ function communityScore(stars: number): number {
 export function calculateQualityScore(quality: McpQuality): number {
   const activity = activityScore(quality.lastUpdate);
   const testCov = quality.testCoverage;
-  const docs = documentationScore('', 0); // 需要外部传入，此处仅用 quality 内字段
   const security = quality.securityAudit ? 100 : 30;
   const community = communityScore(quality.stars);
 

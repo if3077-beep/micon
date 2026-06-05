@@ -13,30 +13,7 @@ import type { AgentDefinition, RunConfig } from '../../core/types.js';
 import { AgentEngine } from '../../core/engine.js';
 import { AgentStore } from '../../agent/store.js';
 import { loadAgent } from '../../agent/loader.js';
-
-// ---------------------------------------------------------------------------
-// 辅助函数
-// ---------------------------------------------------------------------------
-
-/** 收集 --input key=value 参数 */
-function collectInputs(
-  value: string,
-  previous: Record<string, unknown>,
-): Record<string, unknown> {
-  const eqIndex = value.indexOf('=');
-  if (eqIndex === -1) {
-    throw new Error(`Invalid input format: "${value}". Expected key=value`);
-  }
-  const key = value.slice(0, eqIndex);
-  const raw = value.slice(eqIndex + 1);
-
-  let parsed: unknown = raw;
-  if (raw === 'true') parsed = true;
-  else if (raw === 'false') parsed = false;
-  else if (/^\d+$/.test(raw)) parsed = Number(raw);
-
-  return { ...previous, [key]: parsed };
-}
+import { collectInputs } from '../../utils/format.js';
 
 // ---------------------------------------------------------------------------
 // 命令定义
@@ -110,23 +87,23 @@ export function createDevCommand(): Command {
               : '•';
 
             if (type === 'tool_call') {
-              const toolName = (step.toolCall as Record<string, unknown>)?.name ?? 'unknown';
+              const toolName = step.toolName ?? 'unknown';
               console.log(
                 `  ${emoji} Step ${step.stepNumber ?? '?'}: ${chalk.cyan(`[${toolName}]`)}`,
               );
-              if (step.result) {
-                console.log(chalk.dim(`     Result: ${String(step.result).slice(0, 150)}`));
+              if (step.toolOutput) {
+                console.log(chalk.dim(`     Result: ${String(step.toolOutput).slice(0, 150)}`));
               }
             } else if (type === 'llm_thinking') {
               console.log(
                 `  ${emoji} Step ${step.stepNumber ?? '?'}: ${chalk.yellow('thinking')}`,
               );
-              if (step.result) {
-                console.log(chalk.dim(`     ${String(step.result).slice(0, 150)}`));
+              if (step.toolOutput) {
+                console.log(chalk.dim(`     ${String(step.toolOutput).slice(0, 150)}`));
               }
             } else if (type === 'constraint_check') {
               console.log(
-                `  ${emoji} Step ${step.stepNumber ?? '?'}: ${chalk.red(`constraint — ${step.error ?? step.result ?? ''}`)}`,
+                `  ${emoji} Step ${step.stepNumber ?? '?'}: ${chalk.red(`constraint — ${step.toolOutput ?? ''}`)}`,
               );
             } else if (type === 'user_rejected') {
               console.log(
@@ -138,7 +115,7 @@ export function createDevCommand(): Command {
         }
 
         // 最终输出（兼容 engine 实际返回的 result 字段和类型定义的 output 字段）
-        const output = (result as unknown as Record<string, unknown>).result ?? (result as unknown as Record<string, unknown>).output ?? '';
+        const output = (result as unknown as Record<string, unknown>).output ?? '';
         if (output) {
           console.log(chalk.bold('Output:'));
           console.log(chalk.white(String(output)));
@@ -147,9 +124,9 @@ export function createDevCommand(): Command {
 
         // Token 用量
         if (result.tokenUsage) {
-          const tu = result.tokenUsage as { inputTokens?: number; outputTokens?: number };
+          const tu = result.tokenUsage as { input?: number; output?: number };
           console.log(
-            chalk.dim(`Token usage: ${tu.inputTokens ?? 0} input, ${tu.outputTokens ?? 0} output`),
+            chalk.dim(`Token usage: ${tu.input ?? 0} input, ${tu.output ?? 0} output`),
           );
         }
       } catch (err) {

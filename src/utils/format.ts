@@ -1,5 +1,94 @@
 import chalk from 'chalk';
-import type { HubGrade } from '../core/types.js';
+import type { HubGrade, ExecutionStep } from '../core/types.js';
+
+// ---------------------------------------------------------------------------
+// 步骤展示
+// ---------------------------------------------------------------------------
+
+/** 步骤类型 → emoji 前缀 */
+export const STEP_EMOJI: Record<string, string> = {
+  tool_call: '🔍',
+  llm_thinking: '🤖',
+  constraint_check: '⚠️',
+  dry_run: '🔍',
+  tool_error: '❌',
+  user_rejected: '🚫',
+  final_answer: '✨',
+};
+
+/**
+ * 展示执行步骤列表
+ *
+ * 使用 ExecutionStep 类型的正确字段名（toolName, toolOutput）。
+ */
+export function displaySteps(steps: ExecutionStep[]): void {
+  for (const step of steps) {
+    const emoji = STEP_EMOJI[step.type] ?? '•';
+    const type = step.type;
+
+    if (type === 'tool_call' || type === 'dry_run') {
+      const toolName = step.toolName ?? 'unknown';
+      const result = step.toolOutput
+        ? String(step.toolOutput).slice(0, 120)
+        : '';
+      console.log(
+        chalk.dim(`  ${emoji} Step ${step.stepNumber ?? '?'}: `) +
+        chalk.cyan(`[${toolName}]`) +
+        (result ? chalk.dim(` → ${result}`) : ''),
+      );
+    } else if (type === 'llm_thinking') {
+      const thinking = step.toolOutput
+        ? String(step.toolOutput).slice(0, 100)
+        : '';
+      console.log(
+        chalk.dim(`  ${emoji} Step ${step.stepNumber ?? '?'}: `) +
+        chalk.yellow('thinking') +
+        (thinking ? chalk.dim(` — ${thinking}`) : ''),
+      );
+    } else if (type === 'constraint_check') {
+      const reason = step.toolOutput ?? '';
+      console.log(
+        chalk.dim(`  ${emoji} Step ${step.stepNumber ?? '?'}: `) +
+        chalk.red(`constraint — ${reason}`),
+      );
+    } else if (type === 'final_answer') {
+      // final answer 单独展示
+    } else {
+      console.log(
+        chalk.dim(`  ${emoji} Step ${step.stepNumber ?? '?'}: `) + `${type}`,
+      );
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// CLI 输入收集
+// ---------------------------------------------------------------------------
+
+/** 收集 --input key=value 参数 */
+export function collectInputs(
+  value: string,
+  previous: Record<string, unknown>,
+): Record<string, unknown> {
+  const eqIndex = value.indexOf('=');
+  if (eqIndex === -1) {
+    throw new Error(`Invalid input format: "${value}". Expected key=value`);
+  }
+  const key = value.slice(0, eqIndex);
+  const raw = value.slice(eqIndex + 1);
+
+  // 尝试解析为数字或布尔值，否则保留字符串
+  let parsed: unknown = raw;
+  if (raw === 'true') parsed = true;
+  else if (raw === 'false') parsed = false;
+  else if (/^\d+$/.test(raw)) parsed = Number(raw);
+
+  return { ...previous, [key]: parsed };
+}
+
+// ---------------------------------------------------------------------------
+// 格式化工具函数
+// ---------------------------------------------------------------------------
 
 /** 等级 → 颜色映射 */
 const GRADE_COLORS: Record<string, (text: string) => string> = {

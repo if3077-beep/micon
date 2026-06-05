@@ -98,6 +98,7 @@ export class AgentEngine {
   private mcpClient = new McpClient();
   /** toolName → serverName 映射 */
   private toolServerMap = new Map<string, string>();
+  private lastStepTime = Date.now();
 
   constructor(config: RunConfig) {
     this.config = config;
@@ -213,20 +214,6 @@ export class AgentEngine {
                 });
                 continue;
               }
-            }
-
-            // -- Dry run --
-            if (this.config.dryRun) {
-              this.addStep('dry_run', {
-                toolName,
-                toolOutput: `[dry-run] 将调用工具: ${toolName}`,
-              });
-              messages.push({
-                role: 'tool',
-                tool_call_id: tc.id,
-                content: `[dry-run] 将调用工具: ${toolName}，参数: ${toolArgsStr}`,
-              });
-              continue;
             }
 
             // -- Act: execute tool --
@@ -420,9 +407,9 @@ export class AgentEngine {
       passed?: boolean;
     },
   ): void {
-    const stepStart = this.steps.length > 0
-      ? Date.now()
-      : Date.now();
+    const now = Date.now();
+    const duration = now - this.lastStepTime;
+    this.lastStepTime = now;
     this.steps.push({
       stepNumber: this.steps.length + 1,
       type,
@@ -432,7 +419,7 @@ export class AgentEngine {
       thinking: data.thinking,
       decision: data.decision,
       passed: data.passed,
-      duration: 0, // 简化：单步耗时由外部计算
+      duration,
     });
   }
 

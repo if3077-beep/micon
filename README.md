@@ -111,7 +111,9 @@ Agents are defined in YAML with **goal + tools + constraints** — not step-by-s
 | `micon run <target>` | Run agent by name, YAML file, or natural language |
 | `micon search <query>` | Search the MCP server hub |
 | `micon add <server>` | Install an MCP server from the hub |
+| `micon remove <server>` | Uninstall an MCP server |
 | `micon list` | List installed MCP servers |
+| `micon agents` | List saved agent definitions |
 | `micon init <name>` | Create a new agent definition file |
 | `micon dev <agent>` | Run agent in interactive dev mode |
 | `micon log [agent]` | View agent execution history |

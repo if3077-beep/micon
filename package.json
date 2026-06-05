@@ -1,6 +1,6 @@
 {
   "name": "micon",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "MCP Server Hub + Lightweight Agent Runtime — discover, install, and run AI agents powered by MCP",
   "type": "module",
   "bin": {

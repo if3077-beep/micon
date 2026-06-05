@@ -35,6 +35,18 @@ const TEMPLATES: Record<string, Partial<AgentDefinition>> = {
     constraints: [],
     output: { format: 'text', to: 'stdout' },
   },
+  'web-researcher': {
+    description: 'Web research agent that searches and summarizes online information',
+    goal: 'Search the web for information on a given topic, evaluate sources, and produce a structured summary with citations',
+    constraints: ['read-only'],
+    output: { format: 'markdown', to: 'stdout' },
+  },
+  'file-organizer': {
+    description: 'File organization agent that manages and restructures files',
+    goal: 'Organize files in a directory according to specified rules — rename, move, categorize, and clean up',
+    constraints: [],
+    output: { format: 'text', to: 'stdout' },
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -46,7 +58,7 @@ export function createInitCommand(): Command {
   cmd
     .description('Create a new agent definition file')
     .argument('<name>', 'Agent name')
-    .option('-t, --template <template>', 'Use a template (reviewer|writer|assistant)')
+    .option('-t, --template <template>', 'Use a template (reviewer|writer|assistant|web-researcher|file-organizer)')
     .action(async (name, options) => {
       try {
         let agent: AgentDefinition;
@@ -57,7 +69,7 @@ export function createInitCommand(): Command {
           if (!template) {
             console.error(
               chalk.red(`Unknown template: "${options.template}"`),
-              chalk.dim('\nAvailable templates: reviewer, writer, assistant'),
+              chalk.dim('\nAvailable templates: reviewer, writer, assistant, web-researcher, file-organizer'),
             );
             process.exit(1);
           }

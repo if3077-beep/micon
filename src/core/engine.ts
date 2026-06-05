@@ -119,12 +119,18 @@ export class AgentEngine {
       // dry-run 模式：不连接 MCP、不调 LLM，只展示执行计划
       if (this.config.dryRun) {
         const allTools = await this.getDryRunTools();
+        const toolList = allTools.length > 0
+          ? allTools.map((t) => t.name).join(', ')
+          : '(none — no MCP servers installed or capabilities found)';
         const plan = [
           `Agent: ${agent.name}`,
           `Goal: ${agent.goal}`,
-          `Tools: ${allTools.map((t) => t.name).join(', ') || '(none)'}`,
+          `Capabilities (overview, not exact tool names): ${toolList}`,
           `Constraints: ${agent.constraints.join(', ') || '(none)'}`,
           `Max steps: ${this.config.maxSteps}`,
+          '',
+          'Note: This is a capability overview. Actual tool names are discovered',
+          'at runtime when MCP servers are connected. Use `micon run` to execute.',
         ].join('\n');
 
         return {
@@ -307,28 +313,34 @@ export class AgentEngine {
     }> = [];
 
     for (const serverName of serverNames) {
-      // 获取安装命令
-      const installCmd = await registry.getInstallCommand(serverName);
-      // 获取用户配置（如 API Token）
-      const installed = await registry.get(serverName);
-      const env = installed?.config ?? {};
+      try {
+        // 获取安装命令
+        const installCmd = await registry.getInstallCommand(serverName);
+        // 获取用户配置（如 API Token）
+        const installed = await registry.get(serverName);
+        const env = installed?.config ?? {};
 
-      // 连接 MCP Server
-      await this.mcpClient.connect(serverName, installCmd.command, installCmd.args, env);
+        // 连接 MCP Server
+        await this.mcpClient.connect(serverName, installCmd.command, installCmd.args, env);
 
-      // 获取工具列表
-      const tools = await this.mcpClient.listTools(serverName);
-      for (const tool of tools) {
-        allTools.push({
-          name: tool.name,
-          description: tool.description ?? '',
-          inputSchema: (tool.inputSchema as Record<string, unknown>) ?? {
-            type: 'object',
-            properties: {},
-          },
-        });
-        // 记录 toolName → serverName 映射
-        this.toolServerMap.set(tool.name, serverName);
+        // 获取工具列表
+        const tools = await this.mcpClient.listTools(serverName);
+        for (const tool of tools) {
+          allTools.push({
+            name: tool.name,
+            description: tool.description ?? '',
+            inputSchema: (tool.inputSchema as Record<string, unknown>) ?? {
+              type: 'object',
+              properties: {},
+            },
+          });
+          // 记录 toolName → serverName 映射
+          this.toolServerMap.set(tool.name, serverName);
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`Warning: Failed to connect MCP server "${serverName}": ${msg}`);
+        // Continue with remaining servers
       }
     }
 
@@ -352,8 +364,8 @@ export class AgentEngine {
     try {
       return await this.openai.chat.completions.create(params);
     } catch (err) {
-      // Retry once with exponential backoff
-      if (err instanceof OpenAI.APIError) {
+      // Retry once with exponential backoff for API errors and network failures
+      if (err instanceof OpenAI.APIError || err instanceof TypeError) {
         const delay = Math.min(1000 * Math.pow(2, 1), 10000);
         await this.sleep(delay);
         return await this.openai.chat.completions.create(params);

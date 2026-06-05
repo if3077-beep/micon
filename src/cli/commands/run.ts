@@ -36,11 +36,13 @@ async function askSaveAgent(target: string): Promise<void> {
   if (answer.toLowerCase() === 'n') return;
 
   const name = target.slice(0, 40).replace(/[^a-zA-Z0-9_-]/g, '_');
+  const registry = new McpRegistry();
+  const installed = await registry.list();
   const agent: AgentDefinition = {
     name,
     description: target,
     goal: target,
-    tools: [],
+    tools: installed.map((s) => s.manifest.name),
     constraints: [],
     inputs: {},
     output: { format: 'text', to: 'stdout' },

@@ -13,7 +13,8 @@ import type { AgentDefinition, RunConfig } from '../../core/types.js';
 import { AgentEngine } from '../../core/engine.js';
 import { AgentStore } from '../../agent/store.js';
 import { loadAgent } from '../../agent/loader.js';
-import { collectInputs } from '../../utils/format.js';
+import { collectInputs, displaySteps } from '../../utils/format.js';
+import { appendLog } from '../../utils/log-writer.js';
 
 // ---------------------------------------------------------------------------
 // 命令定义
@@ -75,47 +76,14 @@ export function createDevCommand(): Command {
         }
 
         // 展示步骤详情
-        if (result.steps && Array.isArray(result.steps) && result.steps.length > 0) {
+        if (result.steps && result.steps.length > 0) {
           console.log(chalk.bold('Execution steps:'));
-          for (const step of result.steps as unknown as Array<Record<string, unknown>>) {
-            const type = step.type as string;
-            const emoji = type === 'tool_call' ? '🔍'
-              : type === 'llm_thinking' ? '🤖'
-              : type === 'constraint_check' ? '⚠️'
-              : type === 'user_rejected' ? '🚫'
-              : type === 'final_answer' ? '✨'
-              : '•';
-
-            if (type === 'tool_call') {
-              const toolName = step.toolName ?? 'unknown';
-              console.log(
-                `  ${emoji} Step ${step.stepNumber ?? '?'}: ${chalk.cyan(`[${toolName}]`)}`,
-              );
-              if (step.toolOutput) {
-                console.log(chalk.dim(`     Result: ${String(step.toolOutput).slice(0, 150)}`));
-              }
-            } else if (type === 'llm_thinking') {
-              console.log(
-                `  ${emoji} Step ${step.stepNumber ?? '?'}: ${chalk.yellow('thinking')}`,
-              );
-              if (step.toolOutput) {
-                console.log(chalk.dim(`     ${String(step.toolOutput).slice(0, 150)}`));
-              }
-            } else if (type === 'constraint_check') {
-              console.log(
-                `  ${emoji} Step ${step.stepNumber ?? '?'}: ${chalk.red(`constraint — ${step.toolOutput ?? ''}`)}`,
-              );
-            } else if (type === 'user_rejected') {
-              console.log(
-                `  ${emoji} Step ${step.stepNumber ?? '?'}: ${chalk.red('user rejected tool call')}`,
-              );
-            }
-          }
+          displaySteps(result.steps);
           console.log();
         }
 
         // 最终输出（兼容 engine 实际返回的 result 字段和类型定义的 output 字段）
-        const output = (result as unknown as Record<string, unknown>).output ?? '';
+        const output = result.output ?? '';
         if (output) {
           console.log(chalk.bold('Output:'));
           console.log(chalk.white(String(output)));
@@ -129,6 +97,9 @@ export function createDevCommand(): Command {
             chalk.dim(`Token usage: ${tu.input ?? 0} input, ${tu.output ?? 0} output`),
           );
         }
+
+        // 保存日志
+        await appendLog(agent.name, result);
       } catch (err) {
         runSpinner.fail('Dev mode execution failed');
         console.error(chalk.red(err instanceof Error ? err.message : String(err)));

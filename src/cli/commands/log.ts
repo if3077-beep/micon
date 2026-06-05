@@ -115,8 +115,11 @@ export function createLogCommand(): Command {
           for (const entry of entries) {
             const status = entry.status as string;
             const emoji = statusEmoji(status);
-            const duration = typeof entry.duration === 'number'
-              ? formatDuration(entry.duration)
+            // ExecutionResult 没有 duration 字段，从 startTime/endTime 计算
+            const startMs = entry.startTime ? new Date(entry.startTime as string).getTime() : 0;
+            const endMs = entry.endTime ? new Date(entry.endTime as string).getTime() : 0;
+            const duration = (startMs && endMs)
+              ? formatDuration(endMs - startMs)
               : '?';
             const startTime = entry.startTime
               ? new Date(entry.startTime as string).toLocaleString()

@@ -125,6 +125,15 @@ export class ConfigStore {
     }
 
     if (!config.llm.apiKey) {
+      // Non-TTY: can't prompt, throw clear error
+      if (!process.stdin.isTTY) {
+        throw new Error(
+          'API key is not set and stdin is not a TTY. ' +
+          'Set it via environment variable: OPENAI_API_KEY=sk-xxx micon run ...'
+        );
+      }
+
+      // TTY: interactive prompt
       const { default: inquirer } = await import('inquirer');
       const { apiKey } = await inquirer.prompt<{
         apiKey: string;

@@ -33,34 +33,42 @@ export class HubSearch {
     this.servers = this.loadRegistry();
   }
 
-  /** 加载注册表数据：优先内置，回退本地缓存 */
+  /** 加载注册表数据：合并内置 + 本地缓存（去重） */
   private loadRegistry(): McpServerManifest[] {
-    // 优先使用内置 registry
-    if (existsSync(BUNDLED_REGISTRY_PATH)) {
-      try {
-        const raw = readFileSync(BUNDLED_REGISTRY_PATH, 'utf-8');
-        const data = JSON.parse(raw);
-        if (Array.isArray(data) && data.length > 0) {
-          return data as McpServerManifest[];
-        }
-      } catch {
-        // 内置数据损坏，尝试本地缓存
-      }
-    }
+    const servers = new Map<string, McpServerManifest>();
 
-    // 回退到 ~/.micon/hub-cache.json
+    // 1. 加载本地缓存（indexer 更新的数据）
     const cachePath = join(homedir(), '.micon', 'hub-cache.json');
     if (existsSync(cachePath)) {
       try {
         const raw = readFileSync(cachePath, 'utf-8');
         const data = JSON.parse(raw);
-        if (Array.isArray(data)) return data as McpServerManifest[];
+        if (Array.isArray(data)) {
+          for (const s of data as McpServerManifest[]) {
+            servers.set(s.name, s);
+          }
+        }
       } catch {
-        // 缓存文件损坏，返回空
+        // 缓存文件损坏，继续
       }
     }
 
-    return [];
+    // 2. 加载内置 registry（覆盖缓存中的同名条目，保证内置数据优先）
+    if (existsSync(BUNDLED_REGISTRY_PATH)) {
+      try {
+        const raw = readFileSync(BUNDLED_REGISTRY_PATH, 'utf-8');
+        const data = JSON.parse(raw);
+        if (Array.isArray(data)) {
+          for (const s of data as McpServerManifest[]) {
+            servers.set(s.name, s);
+          }
+        }
+      } catch {
+        // 内置数据损坏，继续
+      }
+    }
+
+    return Array.from(servers.values());
   }
 
   /**

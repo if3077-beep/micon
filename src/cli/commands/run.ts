@@ -46,7 +46,7 @@ function collectInputs(
 /** 将执行结果追加到日志文件 */
 async function appendLog(
   agentName: string,
-  result: Record<string, unknown>,
+  result: unknown,
 ): Promise<void> {
   const logsDir = join(homedir(), '.micon', 'logs');
   await mkdir(logsDir, { recursive: true });
@@ -274,12 +274,7 @@ export function createRunCommand(): Command {
         }
 
         // 9. 保存日志
-        await appendLog(agent.name, {
-          ...result,
-          agentName: agent.name,
-          startTime: new Date().toISOString(),
-          endTime: new Date().toISOString(),
-        });
+        await appendLog(agent.name, result);
 
         // 10. 自然语言模式下询问是否保存
         if (isAdHoc && status === 'success') {

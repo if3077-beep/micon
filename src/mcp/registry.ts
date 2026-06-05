@@ -2,49 +2,15 @@
  * MCP Server 注册表
  *
  * 管理已安装的 MCP Server：清单、权限、配置和启动命令。
- * 数据持久化到 ~/.micon/config.json。
+ * 数据持久化委托给 ConfigStore（~/.micon/config.json）。
  */
 
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { homedir } from 'node:os';
-import { join } from 'node:path';
 import type {
   InstalledMcpServer,
   McpServerManifest,
-  MiconConfig,
 } from '../core/types.js';
 
-// ---------------------------------------------------------------------------
-// 本地配置读写（config/store.ts 尚未创建前的独立实现）
-// ---------------------------------------------------------------------------
-
-const CONFIG_DIR = join(homedir(), '.micon');
-const CONFIG_PATH = join(CONFIG_DIR, 'config.json');
-
-const DEFAULT_CONFIG: MiconConfig = {
-  version: '0.1.0',
-  llm: {
-    provider: 'openai',
-    apiKey: '',
-    model: 'gpt-4o',
-  },
-  mcpServers: {},
-  agents: {},
-};
-
-async function loadConfig(): Promise<MiconConfig> {
-  try {
-    const raw = await readFile(CONFIG_PATH, 'utf-8');
-    return JSON.parse(raw) as MiconConfig;
-  } catch {
-    return { ...DEFAULT_CONFIG, mcpServers: {}, agents: {} };
-  }
-}
-
-async function saveConfig(config: MiconConfig): Promise<void> {
-  await mkdir(CONFIG_DIR, { recursive: true });
-  await writeFile(CONFIG_PATH, JSON.stringify(config, null, 2), 'utf-8');
-}
+import { ConfigStore } from '../config/store.js';
 
 // ---------------------------------------------------------------------------
 // McpRegistry
@@ -54,23 +20,20 @@ async function saveConfig(config: MiconConfig): Promise<void> {
  * MCP Server 注册表
  *
  * 负责已安装 Server 的增删查、权限管理和启动命令生成。
- * 底层读写 ~/.micon/config.json 中的 mcpServers 字段。
+ * 底层通过 ConfigStore 读写 ~/.micon/config.json 中的 mcpServers 字段。
  */
 export class McpRegistry {
+  private store = new ConfigStore();
+
   /**
    * 安装（注册）一个 MCP Server
-   *
-   * @param manifest    - Server 清单元数据
-   * @param permissions - 用户授权的权限名称列表
-   * @param config      - 用户提供的配置值
-   * @returns 安装后的完整记录
    */
   async install(
     manifest: McpServerManifest,
     permissions: string[],
     config: Record<string, string>,
   ): Promise<InstalledMcpServer> {
-    const cfg = await loadConfig();
+    const cfg = await this.store.load();
 
     if (cfg.mcpServers[manifest.name]) {
       throw new Error(
@@ -86,7 +49,7 @@ export class McpRegistry {
     };
 
     cfg.mcpServers[manifest.name] = entry;
-    await saveConfig(cfg);
+    await this.store.save(cfg);
     return entry;
   }
 
@@ -94,21 +57,21 @@ export class McpRegistry {
    * 卸载（移除）一个 MCP Server
    */
   async uninstall(serverName: string): Promise<void> {
-    const cfg = await loadConfig();
+    const cfg = await this.store.load();
 
     if (!cfg.mcpServers[serverName]) {
       throw new Error(`MCP server "${serverName}" is not installed.`);
     }
 
     delete cfg.mcpServers[serverName];
-    await saveConfig(cfg);
+    await this.store.save(cfg);
   }
 
   /**
    * 获取指定已安装 Server 的信息
    */
   async get(serverName: string): Promise<InstalledMcpServer | undefined> {
-    const cfg = await loadConfig();
+    const cfg = await this.store.load();
     return cfg.mcpServers[serverName];
   }
 
@@ -116,14 +79,12 @@ export class McpRegistry {
    * 列出所有已安装的 MCP Server
    */
   async list(): Promise<InstalledMcpServer[]> {
-    const cfg = await loadConfig();
+    const cfg = await this.store.load();
     return Object.values(cfg.mcpServers);
   }
 
   /**
    * 获取启动指定 Server 的命令和参数
-   *
-   * 根据 Server 的安装类型（npm/npx/binary）生成对应的启动命令。
    */
   async getInstallCommand(
     serverName: string,
@@ -142,7 +103,6 @@ export class McpRegistry {
           args: ['-y', install.package ?? serverName, ...(install.args ?? [])],
         };
       case 'npm':
-        // npm 安装后通过 node 直接运行
         return {
           command: 'node',
           args: [
@@ -181,7 +141,7 @@ export class McpRegistry {
     serverName: string,
     permission: string,
   ): Promise<void> {
-    const cfg = await loadConfig();
+    const cfg = await this.store.load();
     const entry = cfg.mcpServers[serverName];
 
     if (!entry) {
@@ -190,7 +150,7 @@ export class McpRegistry {
 
     if (!entry.grantedPermissions.includes(permission)) {
       entry.grantedPermissions.push(permission);
-      await saveConfig(cfg);
+      await this.store.save(cfg);
     }
   }
 }

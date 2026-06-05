@@ -7,10 +7,14 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 
 import { HubSearch } from '../../hub/search.js';
 import { McpRegistry } from '../../mcp/registry.js';
 import { AuthManager } from '../../config/auth.js';
+
+const execFileAsync = promisify(execFile);
 
 // ---------------------------------------------------------------------------
 // 命令定义
@@ -112,6 +116,24 @@ export function createAddCommand(): Command {
           } else {
             throw err;
           }
+        }
+
+        // 6.5 实际安装 MCP Server 包
+        if (manifest.install.type === 'npm') {
+          const pkgSpinner = ora('Installing npm package...').start();
+          try {
+            await execFileAsync('npm', ['install', '-g', manifest.install.package ?? serverName], {
+              timeout: 120000,
+            });
+            pkgSpinner.succeed('Package installed');
+          } catch (err) {
+            pkgSpinner.warn('Package installation failed (server registered anyway)');
+            console.log(chalk.yellow('  You may need to manually install: ' + (manifest.install.package ?? serverName)));
+          }
+        } else if (manifest.install.type === 'npx') {
+          console.log(chalk.dim('  npx will auto-download on first use'));
+        } else if (manifest.install.type === 'binary') {
+          console.log(chalk.dim('  Ensure the binary is in your PATH'));
         }
 
         // 7. 展示可用能力

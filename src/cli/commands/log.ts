@@ -125,9 +125,9 @@ export function createLogCommand(): Command {
             const steps = entry.steps as Array<Record<string, unknown>> | undefined;
             const stepCount = steps?.length ?? 0;
 
-            const tu = entry.tokenUsage as { inputTokens?: number; outputTokens?: number } | undefined;
+            const tu = entry.tokenUsage as { input?: number; output?: number } | undefined;
             const tokenInfo = tu
-              ? `${(tu.inputTokens ?? 0) + (tu.outputTokens ?? 0)} tokens`
+              ? `${(tu.input ?? 0) + (tu.output ?? 0)} tokens`
               : '';
 
             console.log(
@@ -143,8 +143,7 @@ export function createLogCommand(): Command {
               const toolCalls = steps.filter((s) => s.type === 'tool_call');
               if (toolCalls.length > 0) {
                 const toolNames = toolCalls.map((s) => {
-                  const tc = s.toolCall as Record<string, unknown> | undefined;
-                  return tc?.name ?? '?';
+                  return (s.toolName as string) ?? '?';
                 });
                 console.log(chalk.dim(`     Tools: ${toolNames.join(' → ')}`));
               }

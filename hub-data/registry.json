@@ -1,0 +1,374 @@
+[
+  {
+    "name": "@anthropic/github-mcp",
+    "displayName": "GitHub MCP",
+    "description": "Official GitHub integration for MCP - manage repos, PRs, issues, and actions",
+    "version": "1.2.0",
+    "repository": "https://github.com/anthropics/github-mcp",
+    "category": "development",
+    "permissions": [
+      { "name": "github:read", "description": "Read repository content", "default": "allow" },
+      { "name": "github:write", "description": "Create comments, issues", "default": "ask" },
+      { "name": "github:admin", "description": "Merge PRs, manage settings", "default": "deny" }
+    ],
+    "capabilities": [
+      { "name": "get_pr_diff", "description": "Get PR diff content" },
+      { "name": "comment_pr", "description": "Comment on a PR" },
+      { "name": "list_issues", "description": "List repository issues" },
+      { "name": "create_issue", "description": "Create a new issue" },
+      { "name": "list_prs", "description": "List pull requests" }
+    ],
+    "install": { "type": "npx", "package": "@anthropic/github-mcp", "command": "npx", "args": ["-y", "@anthropic/github-mcp"] },
+    "config": [
+      { "name": "GITHUB_TOKEN", "type": "string", "description": "GitHub personal access token", "required": true }
+    ],
+    "quality": { "stars": 2100, "lastUpdate": "2026-05-28T00:00:00Z", "testCoverage": 89, "securityAudit": true, "compatibility": "micon >=0.1, mcp-spec 2025-03" }
+  },
+  {
+    "name": "@anthropic/filesystem-mcp",
+    "displayName": "Filesystem MCP",
+    "description": "Secure file system operations - read, write, search, and manage files and directories with configurable access controls",
+    "version": "1.0.3",
+    "repository": "https://github.com/anthropics/filesystem-mcp",
+    "category": "development",
+    "permissions": [
+      { "name": "fs:read", "description": "Read file contents", "default": "allow" },
+      { "name": "fs:write", "description": "Write or modify files", "default": "ask" },
+      { "name": "fs:delete", "description": "Delete files or directories", "default": "deny" }
+    ],
+    "capabilities": [
+      { "name": "read_file", "description": "Read file contents" },
+      { "name": "write_file", "description": "Write content to a file" },
+      { "name": "list_directory", "description": "List directory contents" },
+      { "name": "search_files", "description": "Search files by pattern" },
+      { "name": "move_file", "description": "Move or rename files" }
+    ],
+    "install": { "type": "npx", "package": "@anthropic/filesystem-mcp", "command": "npx", "args": ["-y", "@anthropic/filesystem-mcp"] },
+    "config": [
+      { "name": "ALLOWED_DIRS", "type": "string", "description": "Comma-separated list of allowed directories", "required": true }
+    ],
+    "quality": { "stars": 1800, "lastUpdate": "2026-05-25T00:00:00Z", "testCoverage": 92, "securityAudit": true, "compatibility": "micon >=0.1, mcp-spec 2025-03" }
+  },
+  {
+    "name": "@community/slack-mcp",
+    "displayName": "Slack MCP",
+    "description": "Slack workspace integration - send messages, read channels, manage threads and reactions",
+    "version": "0.9.1",
+    "repository": "https://github.com/mcp-community/slack-mcp",
+    "category": "communication",
+    "permissions": [
+      { "name": "slack:read", "description": "Read messages and channels", "default": "allow" },
+      { "name": "slack:write", "description": "Send messages and reactions", "default": "ask" },
+      { "name": "slack:admin", "description": "Manage channels and members", "default": "deny" }
+    ],
+    "capabilities": [
+      { "name": "send_message", "description": "Send a message to a channel" },
+      { "name": "read_channel", "description": "Read channel messages" },
+      { "name": "list_channels", "description": "List workspace channels" },
+      { "name": "add_reaction", "description": "Add reaction to a message" },
+      { "name": "search_messages", "description": "Search messages across channels" }
+    ],
+    "install": { "type": "npx", "package": "@community/slack-mcp", "command": "npx", "args": ["-y", "@community/slack-mcp"] },
+    "config": [
+      { "name": "SLACK_BOT_TOKEN", "type": "string", "description": "Slack Bot OAuth token", "required": true },
+      { "name": "SLACK_TEAM_ID", "type": "string", "description": "Slack team ID", "required": false }
+    ],
+    "quality": { "stars": 620, "lastUpdate": "2026-05-15T00:00:00Z", "testCoverage": 74, "securityAudit": false, "compatibility": "micon >=0.1, mcp-spec 2025-03" }
+  },
+  {
+    "name": "@community/postgres-mcp",
+    "displayName": "PostgreSQL MCP",
+    "description": "PostgreSQL database integration - query, schema inspection, migration management and data analysis",
+    "version": "1.1.0",
+    "repository": "https://github.com/mcp-community/postgres-mcp",
+    "category": "database",
+    "permissions": [
+      { "name": "postgres:read", "description": "Execute SELECT queries", "default": "allow" },
+      { "name": "postgres:write", "description": "Execute INSERT, UPDATE, DELETE", "default": "ask" },
+      { "name": "postgres:ddl", "description": "Execute DDL operations", "default": "deny" }
+    ],
+    "capabilities": [
+      { "name": "execute_query", "description": "Execute a SQL query" },
+      { "name": "list_tables", "description": "List database tables" },
+      { "name": "describe_table", "description": "Get table schema" },
+      { "name": "list_databases", "description": "List available databases" },
+      { "name": "explain_query", "description": "Get query execution plan" }
+    ],
+    "install": { "type": "npx", "package": "@community/postgres-mcp", "command": "npx", "args": ["-y", "@community/postgres-mcp"] },
+    "config": [
+      { "name": "DATABASE_URL", "type": "string", "description": "PostgreSQL connection string", "required": true }
+    ],
+    "quality": { "stars": 890, "lastUpdate": "2026-05-20T00:00:00Z", "testCoverage": 81, "securityAudit": true, "compatibility": "micon >=0.1, Node 18+, PostgreSQL 14+" }
+  },
+  {
+    "name": "@community/web-scraper-mcp",
+    "displayName": "Web Scraper MCP",
+    "description": "Web scraping and content extraction - fetch pages, parse HTML, extract structured data from websites",
+    "version": "0.8.2",
+    "repository": "https://github.com/mcp-community/web-scraper-mcp",
+    "category": "development",
+    "permissions": [
+      { "name": "web:fetch", "description": "Fetch web pages", "default": "allow" },
+      { "name": "web:submit", "description": "Submit forms on web pages", "default": "ask" }
+    ],
+    "capabilities": [
+      { "name": "fetch_page", "description": "Fetch a web page" },
+      { "name": "extract_links", "description": "Extract links from a page" },
+      { "name": "extract_text", "description": "Extract text content from a page" },
+      { "name": "parse_table", "description": "Parse HTML tables into structured data" }
+    ],
+    "install": { "type": "npx", "package": "@community/web-scraper-mcp", "command": "npx", "args": ["-y", "@community/web-scraper-mcp"] },
+    "config": [
+      { "name": "USER_AGENT", "type": "string", "description": "Custom User-Agent header", "required": false }
+    ],
+    "quality": { "stars": 430, "lastUpdate": "2026-04-10T00:00:00Z", "testCoverage": 65, "securityAudit": false, "compatibility": "micon >=0.1, mcp-spec 2025-03" }
+  },
+  {
+    "name": "@devtools/docker-mcp",
+    "displayName": "Docker MCP",
+    "description": "Docker container management - build, run, monitor and orchestrate containers and images",
+    "version": "1.0.0",
+    "repository": "https://github.com/mcp-devtools/docker-mcp",
+    "category": "cloud",
+    "permissions": [
+      { "name": "docker:read", "description": "Inspect containers and images", "default": "allow" },
+      { "name": "docker:run", "description": "Run and manage containers", "default": "ask" },
+      { "name": "docker:system", "description": "System-level Docker operations", "default": "deny" }
+    ],
+    "capabilities": [
+      { "name": "list_containers", "description": "List running containers" },
+      { "name": "run_container", "description": "Run a Docker container" },
+      { "name": "build_image", "description": "Build a Docker image" },
+      { "name": "container_logs", "description": "Get container logs" },
+      { "name": "list_images", "description": "List Docker images" }
+    ],
+    "install": { "type": "npx", "package": "@devtools/docker-mcp", "command": "npx", "args": ["-y", "@devtools/docker-mcp"] },
+    "config": [
+      { "name": "DOCKER_HOST", "type": "string", "description": "Docker daemon host URL", "required": false }
+    ],
+    "quality": { "stars": 560, "lastUpdate": "2026-05-22T00:00:00Z", "testCoverage": 78, "securityAudit": true, "compatibility": "micon >=0.1, Docker 24+" }
+  },
+  {
+    "name": "@devtools/terraform-mcp",
+    "displayName": "Terraform MCP",
+    "description": "Infrastructure as Code with Terraform - plan, apply, and manage cloud infrastructure resources",
+    "version": "0.7.0",
+    "repository": "https://github.com/mcp-devtools/terraform-mcp",
+    "category": "cloud",
+    "permissions": [
+      { "name": "terraform:read", "description": "Read Terraform state and plans", "default": "allow" },
+      { "name": "terraform:apply", "description": "Apply Terraform changes", "default": "ask" },
+      { "name": "terraform:destroy", "description": "Destroy infrastructure", "default": "deny" }
+    ],
+    "capabilities": [
+      { "name": "terraform_plan", "description": "Run terraform plan" },
+      { "name": "terraform_apply", "description": "Apply Terraform configuration" },
+      { "name": "show_state", "description": "Show current Terraform state" },
+      { "name": "list_resources", "description": "List managed resources" }
+    ],
+    "install": { "type": "npx", "package": "@devtools/terraform-mcp", "command": "npx", "args": ["-y", "@devtools/terraform-mcp"] },
+    "config": [
+      { "name": "TF_WORKSPACE", "type": "string", "description": "Terraform Cloud workspace", "required": false },
+      { "name": "TF_CLI_PATH", "type": "string", "description": "Path to terraform binary", "required": false }
+    ],
+    "quality": { "stars": 310, "lastUpdate": "2026-04-28T00:00:00Z", "testCoverage": 70, "securityAudit": false, "compatibility": "micon >=0.1, Terraform 1.6+" }
+  },
+  {
+    "name": "@anthropic/brave-search-mcp",
+    "displayName": "Brave Search MCP",
+    "description": "Web search powered by Brave Search API - perform queries, get instant answers and search suggestions",
+    "version": "1.1.2",
+    "repository": "https://github.com/anthropics/brave-search-mcp",
+    "category": "development",
+    "permissions": [
+      { "name": "search:query", "description": "Execute search queries", "default": "allow" }
+    ],
+    "capabilities": [
+      { "name": "web_search", "description": "Perform a web search" },
+      { "name": "instant_answer", "description": "Get instant answer for a query" },
+      { "name": "suggest", "description": "Get search suggestions" }
+    ],
+    "install": { "type": "npx", "package": "@anthropic/brave-search-mcp", "command": "npx", "args": ["-y", "@anthropic/brave-search-mcp"] },
+    "config": [
+      { "name": "BRAVE_API_KEY", "type": "string", "description": "Brave Search API key", "required": true }
+    ],
+    "quality": { "stars": 1500, "lastUpdate": "2026-05-30T00:00:00Z", "testCoverage": 85, "securityAudit": true, "compatibility": "micon >=0.1, mcp-spec 2025-03" }
+  },
+  {
+    "name": "@community/notion-mcp",
+    "displayName": "Notion MCP",
+    "description": "Notion workspace integration - manage pages, databases, blocks and content in your Notion workspace",
+    "version": "0.9.5",
+    "repository": "https://github.com/mcp-community/notion-mcp",
+    "category": "productivity",
+    "permissions": [
+      { "name": "notion:read", "description": "Read pages and databases", "default": "allow" },
+      { "name": "notion:write", "description": "Create and edit pages", "default": "ask" },
+      { "name": "notion:delete", "description": "Delete pages and blocks", "default": "deny" }
+    ],
+    "capabilities": [
+      { "name": "search_pages", "description": "Search Notion pages" },
+      { "name": "get_page", "description": "Get page content" },
+      { "name": "create_page", "description": "Create a new page" },
+      { "name": "query_database", "description": "Query a Notion database" },
+      { "name": "append_block", "description": "Append blocks to a page" }
+    ],
+    "install": { "type": "npx", "package": "@community/notion-mcp", "command": "npx", "args": ["-y", "@community/notion-mcp"] },
+    "config": [
+      { "name": "NOTION_API_KEY", "type": "string", "description": "Notion integration API key", "required": true }
+    ],
+    "quality": { "stars": 720, "lastUpdate": "2026-05-18T00:00:00Z", "testCoverage": 76, "securityAudit": false, "compatibility": "micon >=0.1, mcp-spec 2025-03" }
+  },
+  {
+    "name": "@community/google-drive-mcp",
+    "displayName": "Google Drive MCP",
+    "description": "Google Drive file management - browse, upload, download, and share documents and files",
+    "version": "0.6.1",
+    "repository": "https://github.com/mcp-community/google-drive-mcp",
+    "category": "productivity",
+    "permissions": [
+      { "name": "gdrive:read", "description": "Read files and folders", "default": "allow" },
+      { "name": "gdrive:write", "description": "Upload and modify files", "default": "ask" },
+      { "name": "gdrive:share", "description": "Share files with others", "default": "deny" }
+    ],
+    "capabilities": [
+      { "name": "list_files", "description": "List files in Google Drive" },
+      { "name": "download_file", "description": "Download a file" },
+      { "name": "upload_file", "description": "Upload a file" },
+      { "name": "search_files", "description": "Search files by name" },
+      { "name": "share_file", "description": "Share a file with a user" }
+    ],
+    "install": { "type": "npx", "package": "@community/google-drive-mcp", "command": "npx", "args": ["-y", "@community/google-drive-mcp"] },
+    "config": [
+      { "name": "GOOGLE_CREDENTIALS", "type": "string", "description": "Path to Google OAuth credentials JSON", "required": true }
+    ],
+    "quality": { "stars": 380, "lastUpdate": "2026-04-05T00:00:00Z", "testCoverage": 62, "securityAudit": false, "compatibility": "micon >=0.1, mcp-spec 2025-03" }
+  },
+  {
+    "name": "@devtools/k8s-mcp",
+    "displayName": "Kubernetes MCP",
+    "description": "Kubernetes cluster management - deploy, monitor, scale and troubleshoot applications on K8s clusters",
+    "version": "1.0.1",
+    "repository": "https://github.com/mcp-devtools/k8s-mcp",
+    "category": "cloud",
+    "permissions": [
+      { "name": "k8s:read", "description": "Read cluster resources", "default": "allow" },
+      { "name": "k8s:write", "description": "Create and update resources", "default": "ask" },
+      { "name": "k8s:admin", "description": "Delete resources and cluster admin", "default": "deny" }
+    ],
+    "capabilities": [
+      { "name": "list_pods", "description": "List pods in a namespace" },
+      { "name": "get_logs", "description": "Get pod logs" },
+      { "name": "deploy", "description": "Deploy an application" },
+      { "name": "scale_deployment", "description": "Scale a deployment" },
+      { "name": "describe_resource", "description": "Describe a K8s resource" }
+    ],
+    "install": { "type": "npx", "package": "@devtools/k8s-mcp", "command": "npx", "args": ["-y", "@devtools/k8s-mcp"] },
+    "config": [
+      { "name": "KUBECONFIG", "type": "string", "description": "Path to kubeconfig file", "required": false }
+    ],
+    "quality": { "stars": 480, "lastUpdate": "2026-05-12T00:00:00Z", "testCoverage": 73, "securityAudit": true, "compatibility": "micon >=0.1, kubectl 1.28+" }
+  },
+  {
+    "name": "@community/sentry-mcp",
+    "displayName": "Sentry MCP",
+    "description": "Error tracking and monitoring with Sentry - view issues, analyze stack traces, manage releases and alerts",
+    "version": "0.8.0",
+    "repository": "https://github.com/mcp-community/sentry-mcp",
+    "category": "monitoring",
+    "permissions": [
+      { "name": "sentry:read", "description": "Read issues and events", "default": "allow" },
+      { "name": "sentry:write", "description": "Update issue status and assign", "default": "ask" },
+      { "name": "sentry:admin", "description": "Manage projects and settings", "default": "deny" }
+    ],
+    "capabilities": [
+      { "name": "list_issues", "description": "List project issues" },
+      { "name": "get_issue", "description": "Get issue details and stack trace" },
+      { "name": "list_projects", "description": "List Sentry projects" },
+      { "name": "update_issue", "description": "Update issue status" },
+      { "name": "list_releases", "description": "List project releases" }
+    ],
+    "install": { "type": "npx", "package": "@community/sentry-mcp", "command": "npx", "args": ["-y", "@community/sentry-mcp"] },
+    "config": [
+      { "name": "SENTRY_AUTH_TOKEN", "type": "string", "description": "Sentry authentication token", "required": true },
+      { "name": "SENTRY_ORG", "type": "string", "description": "Sentry organization slug", "required": true }
+    ],
+    "quality": { "stars": 290, "lastUpdate": "2026-05-08T00:00:00Z", "testCoverage": 68, "securityAudit": false, "compatibility": "micon >=0.1, mcp-spec 2025-03" }
+  },
+  {
+    "name": "@anthropic/puppeteer-mcp",
+    "displayName": "Puppeteer MCP",
+    "description": "Browser automation with Puppeteer - navigate pages, interact with elements, capture screenshots and generate PDFs",
+    "version": "1.0.0",
+    "repository": "https://github.com/anthropics/puppeteer-mcp",
+    "category": "development",
+    "permissions": [
+      { "name": "browser:navigate", "description": "Navigate to URLs", "default": "allow" },
+      { "name": "browser:interact", "description": "Click, type, and interact", "default": "ask" },
+      { "name": "browser:download", "description": "Download files from browser", "default": "deny" }
+    ],
+    "capabilities": [
+      { "name": "navigate", "description": "Navigate to a URL" },
+      { "name": "screenshot", "description": "Take a screenshot" },
+      { "name": "click_element", "description": "Click a page element" },
+      { "name": "fill_form", "description": "Fill in form fields" },
+      { "name": "generate_pdf", "description": "Generate PDF from page" }
+    ],
+    "install": { "type": "npx", "package": "@anthropic/puppeteer-mcp", "command": "npx", "args": ["-y", "@anthropic/puppeteer-mcp"] },
+    "config": [
+      { "name": "HEADLESS", "type": "boolean", "description": "Run browser in headless mode", "required": false, "default": "true" }
+    ],
+    "quality": { "stars": 1200, "lastUpdate": "2026-05-26T00:00:00Z", "testCoverage": 83, "securityAudit": true, "compatibility": "micon >=0.1, mcp-spec 2025-03, Chrome 120+" }
+  },
+  {
+    "name": "@community/linear-mcp",
+    "displayName": "Linear MCP",
+    "description": "Project management with Linear - manage issues, projects, cycles and teams for agile workflows",
+    "version": "0.7.3",
+    "repository": "https://github.com/mcp-community/linear-mcp",
+    "category": "productivity",
+    "permissions": [
+      { "name": "linear:read", "description": "Read issues and projects", "default": "allow" },
+      { "name": "linear:write", "description": "Create and update issues", "default": "ask" },
+      { "name": "linear:admin", "description": "Manage teams and settings", "default": "deny" }
+    ],
+    "capabilities": [
+      { "name": "list_issues", "description": "List team issues" },
+      { "name": "create_issue", "description": "Create a new issue" },
+      { "name": "update_issue", "description": "Update an issue" },
+      { "name": "list_projects", "description": "List projects" },
+      { "name": "list_teams", "description": "List available teams" }
+    ],
+    "install": { "type": "npx", "package": "@community/linear-mcp", "command": "npx", "args": ["-y", "@community/linear-mcp"] },
+    "config": [
+      { "name": "LINEAR_API_KEY", "type": "string", "description": "Linear API key", "required": true }
+    ],
+    "quality": { "stars": 340, "lastUpdate": "2026-05-02T00:00:00Z", "testCoverage": 71, "securityAudit": false, "compatibility": "micon >=0.1, mcp-spec 2025-03" }
+  },
+  {
+    "name": "@devtools/aws-mcp",
+    "displayName": "AWS MCP",
+    "description": "Amazon Web Services integration - manage EC2, S3, Lambda, CloudWatch and other AWS services",
+    "version": "0.9.0",
+    "repository": "https://github.com/mcp-devtools/aws-mcp",
+    "category": "cloud",
+    "permissions": [
+      { "name": "aws:read", "description": "Read AWS resources", "default": "allow" },
+      { "name": "aws:write", "description": "Create and modify resources", "default": "ask" },
+      { "name": "aws:admin", "description": "Delete resources and IAM operations", "default": "deny" }
+    ],
+    "capabilities": [
+      { "name": "list_ec2", "description": "List EC2 instances" },
+      { "name": "list_s3_buckets", "description": "List S3 buckets" },
+      { "name": "invoke_lambda", "description": "Invoke a Lambda function" },
+      { "name": "get_cloudwatch_logs", "description": "Get CloudWatch log entries" },
+      { "name": "list_lambda_functions", "description": "List Lambda functions" }
+    ],
+    "install": { "type": "npx", "package": "@devtools/aws-mcp", "command": "npx", "args": ["-y", "@devtools/aws-mcp"] },
+    "config": [
+      { "name": "AWS_REGION", "type": "string", "description": "AWS region", "required": true, "default": "us-east-1" },
+      { "name": "AWS_PROFILE", "type": "string", "description": "AWS CLI profile name", "required": false }
+    ],
+    "quality": { "stars": 650, "lastUpdate": "2026-05-14T00:00:00Z", "testCoverage": 77, "securityAudit": true, "compatibility": "micon >=0.1, AWS SDK v3" }
+  }
+]

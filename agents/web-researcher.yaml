@@ -1,0 +1,26 @@
+name: web-researcher
+description: "搜索网络并整理研究报告"
+
+goal: |
+  根据用户的研究主题，搜索网络上的相关信息，
+  整理成结构化的研究报告，包含关键发现、数据来源和总结。
+
+tools:
+  - @anthropic/brave-search-mcp
+
+constraints:
+  - 只搜索和阅读公开信息
+  - 标注所有信息来源
+  - 区分事实和观点
+
+inputs:
+  topic:
+    type: string
+    description: "研究主题"
+  depth:
+    type: string
+    description: "研究深度: quick | standard | deep"
+
+output:
+  format: markdown
+  to: stdout

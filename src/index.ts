@@ -22,7 +22,7 @@ import type { AgentDefinition, RunConfig } from './core/types.js';
 import { AgentEngine } from './core/engine.js';
 import { AgentStore } from './agent/store.js';
 import { McpRegistry } from './mcp/registry.js';
-import { displaySteps, displayResult } from './utils/format.js';
+import { displayResult } from './utils/format.js';
 import { appendLog } from './utils/log-writer.js';
 import { askSaveAgent } from './utils/agent-helper.js';
 
@@ -91,6 +91,11 @@ async function runAdHoc(instruction: string): Promise<void> {
 
     // 保存日志
     await appendLog(agent.name, result);
+
+    // 非 success 状态设置非零退出码
+    if (result.status === 'error') {
+      process.exit(1);
+    }
 
     // 5. 询问是否保存为可复用 Agent
     if (result.status === 'success') {

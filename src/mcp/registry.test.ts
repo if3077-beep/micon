@@ -15,19 +15,19 @@ import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, copyFileSyn
 
 const MICON_DIR = join(homedir(), '.micon');
 const CONFIG_PATH = join(MICON_DIR, 'config.json');
-const BACKUP_PATH = join(MICON_DIR, 'config.json.test-backup');
+const BACKUP_PATH = join(MICON_DIR, 'config.json.registry-test-backup');
 
 function backupConfig(): void {
   if (existsSync(CONFIG_PATH)) {
     copyFileSync(CONFIG_PATH, BACKUP_PATH);
-    rmSync(CONFIG_PATH);
+    // Don't delete - another test might be reading it
   }
 }
 
 function restoreConfig(): void {
   if (existsSync(BACKUP_PATH)) {
     copyFileSync(BACKUP_PATH, CONFIG_PATH);
-    rmSync(BACKUP_PATH);
+    try { rmSync(BACKUP_PATH); } catch { /* ignore */ }
   }
   // 没有 backup 时不动 config（可能是测试前就存在的真实配置）
 }

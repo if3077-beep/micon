@@ -1,6 +1,6 @@
 {
   "name": "micon",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "MCP Server Hub + Lightweight Agent Runtime — discover, install, and run AI agents powered by MCP",
   "type": "module",
   "bin": {
@@ -12,7 +12,8 @@
     "start": "node dist/index.js",
     "lint": "eslint src/",
     "prepublishOnly": "npm run build",
-    "test": "tsc && node --test dist/**/*.test.js"
+    "test": "tsc && node --test --test-concurrency=1 dist/**/*.test.js",
+    "test:coverage": "tsc && node --experimental-test-coverage --test-concurrency=1 dist/**/*.test.js"
   },
   "keywords": ["mcp", "agent", "ai", "cli", "micon"],
   "license": "MIT",

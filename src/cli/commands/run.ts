@@ -13,7 +13,7 @@ import { AgentEngine } from '../../core/engine.js';
 import { AgentStore } from '../../agent/store.js';
 import { loadAgent } from '../../agent/loader.js';
 import { McpRegistry } from '../../mcp/registry.js';
-import { displaySteps, collectInputs, displayResult } from '../../utils/format.js';
+import { collectInputs, displayResult } from '../../utils/format.js';
 import { appendLog } from '../../utils/log-writer.js';
 import { askSaveAgent } from '../../utils/agent-helper.js';
 
@@ -115,6 +115,11 @@ export function createRunCommand(): Command {
 
         // 9. 保存日志
         await appendLog(agent.name, result);
+
+        // 非 success 状态设置非零退出码
+        if (result.status === 'error') {
+          process.exit(1);
+        }
 
         // 10. 自然语言模式下询问是否保存
         if (isAdHoc && result.status === 'success') {

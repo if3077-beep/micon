@@ -72,6 +72,11 @@ export function createDevCommand(): Command {
 
         // 保存日志
         await appendLog(agent.name, result);
+
+        // 非 success 状态设置非零退出码
+        if (result.status === 'error') {
+          process.exit(1);
+        }
       } catch (err) {
         runSpinner.fail('Dev mode execution failed');
         console.error(chalk.red(err instanceof Error ? err.message : String(err)));
